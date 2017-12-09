@@ -1,0 +1,19 @@
+{
+  "name": "rideshare",
+  "version": "1.0.0",
+  "description": "ride server service for rideshare",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/edwinychu/rideshare.git"
+  },
+  "author": "Edwin Chu",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/edwinychu/rideshare/issues"
+  },
+  "homepage": "https://github.com/edwinychu/rideshare#readme"
+}
