@@ -4,7 +4,7 @@
   "description": "ride server service for rideshare",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Hello\" && exit 1"
+    "test": "echo \"Hello\""
   },
   "repository": {
     "type": "git",
