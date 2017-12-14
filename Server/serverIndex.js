@@ -1,6 +1,7 @@
 const express = require('express');
 const dotenv = require('dotenv');
 const db = require('../Database/dbIndex.js');
+const generateFakeData = require('../fakeData.js');
 
 dotenv.config();
 
@@ -8,7 +9,10 @@ const app = express();
 
 const PORT = process.env.PORT || 8080;
 
-
+// creates new tables in Cassandra and then generates/inserts fake data into it
+db.createTables().then(() => {
+  generateFakeData();
+});
 
 // initial bookings from client
 app.post('/bookings', (req, res) => {});

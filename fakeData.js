@@ -1,95 +1,122 @@
-const faker = require('faker');
-const db = require('./Database/dbIndex.js');
+const insertIntoUnmatched = require('./Database/dbIndex.js').insertIntoUnmatched;
+const insertIntoMatched = require('./Database/dbIndex.js').insertIntoMatched;
 
+const generateFakeData = () => {
+  // timestamp: write a function that geenerates new data from 1/1/2018-3/1/2018 every hour, every day
 
-//timestamp: write a function that geenerates new data from 1/1/2018-3/1/2018 every hour, every day
+  // generates 2315 rides per hour for 90 days
+  let rideId = 0;
+  for (let i = 1483228800; i <= 1491004800; i += 3600) {
+    // 2315 rides per hour = 55560 rides per day
+    const unmatchedRideBatch = [];
+    const matchedRideBatch = [];
+    for (let j = 0; j < 2315; j += 1) {
+      const timeStamp = Math.floor(Math.random() * (i + 3600 - i) + i);
+      const riderId = Math.floor(Math.random() * 5000000);
 
-//generates 2315 rides per hour for 90 days
-let start_unix = 1483228800
-let ride_id = 0;
-for (let i=1483228800; i<=1491004800; i += 3600) {
-  //2315 rides per hour = 55560 rides per day 
-  for (let j=0; j<2315; j++) {
+      const riderStartLog = (Math.random() * (-121.75 - -122.75) + -122.75).toFixed(2);
+      const riderStartLat = (Math.random() * (37.8 - 36.8) + 36.8).toFixed(2);
+      const riderStart = `${riderStartLat.toString()} ${riderStartLog.toString()}`;
+
+      const riderEndLog = (Math.random() * (-121.75 - -122.75) + -122.75).toFixed(2);
+      const riderEndLat = (Math.random() * (37.8 - 36.8) + 36.8).toFixed(2);
+      const riderEnd = `${riderEndLog.toString()} ${riderEndLat.toString()}`;
+
+      const unmatchedRide = {
+        ride_id: rideId,
+        timestamp: timeStamp,
+        rider_id: riderId,
+        rider_start: riderStart,
+        rider_end: riderEnd,
+      };
+
+      // generate extra data for matched db table
+      const waitEst = Math.floor(Math.random() * (11 - 1) + 1);
+      const driver = Math.floor(Math.random() * 5000000);
+      const cancelledStatus = Math.floor(Math.random() * (2 - 0));
+      let cancellationTime;
+      if (cancelledStatus) {
+        if (waitEst > 5) {
+          cancellationTime = Math.floor(Math.random() * (3 - 1) + 1);
+        } else {
+          cancellationTime = Math.floor(Math.random() * (waitEst - 1) + 1);
+        }
+      } else {
+        cancellationTime = 0;
+      }
+
+      const matchedRide = {
+        ride_id: rideId,
+        timestamp: timeStamp,
+        rider_id: riderId,
+        rider_start: riderStart,
+        rider_end: riderEnd,
+        wait_est: waitEst,
+        driver_id: driver,
+        cancelled: cancelledStatus,
+        cancellation_time: cancellationTime,
+      };
+
+      // batch up unmatched and matched rides
+      const unmatchedRideQuery =
+        'INSERT INTO rideshare.unmatched (ride_id, timestamp, rider_id, rider_start, rider_end) VALUES (?, ?, ?, ?, ?)';
+
+      unmatchedRideBatch.push({
+        query: unmatchedRideQuery,
+        params: [rideId, timeStamp, riderId, riderStart, riderEnd],
+      });
+
+      const matchedRideQuery =
+        'INSERT INTO rideshare.matched (ride_id, timestamp, rider_id, rider_start, rider_end, wait_est, driver_id, cancelled, cancellation_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)';
+
+      matchedRideBatch.push({
+        query: matchedRideQuery,
+        params: [
+          rideId,
+          timeStamp,
+          riderId,
+          riderStart,
+          riderEnd,
+          waitEst,
+          driver,
+          cancelledStatus,
+          cancellationTime,
+        ],
+      });
+      rideId += 1;
+    }
+
     
-    let timestamp = Math.random() * ((i+3600) - i) + i;
-    let rider_id = Math.floor(Math.random() * (5000000));
-
-    let rider_start_lat = (Math.random() * (-121.75 - -122.75) + -122.75).toFixed(2);
-    let rider_start_log = (Math.random() * (37.8 - 36.8) + 36.8).toFixed(2);
-    let rider_start = rider_start_lat.toString() + " " + rider_start_log.toString();
-
-    let rider_end_lat = (Math.random() * (-121.75 - -122.75) + -122.75).toFixed(2);
-    let rider_end_log = (Math.random() * (37.8 - 36.8) + 36.8).toFixed(2);
-    let rider_end = rider_end_lat.toString() + " " + rider_end_log.toString();
-
-    const new_ride = {
-      ride_id = ride_id,
-      timestamp: timestamp,
-      rider_id: rider_id,
-      rider_start: rider_start,
-      rider_end: rider_end
-    }
-
-    //store into unmatched db table
-
-
-    //generate extra data for matched db table
-    let wait_est = Math.floor(Math.random() * (11 - 1) + 1);
-    let driver = Math.floor(Math.random() * (5000000));
-    let cancelled = Math.floor(Math.random() * (2 - 0) + 0);
-    if (cancelled) {
-      let cancellation_time = Math.floor(Math.random() * (wait_est-1) + 1);
-    } else {
-      cancellation_time = 0;
-    }
-
-    const matched_ride = {
-      ride_id: ride_id,
-      timestamp: timestamp,
-      rider_id: rider_id,
-      rider_start: rider_start,
-      rider_end: rider_end,
-      wait_est: wait_est,
-      driver_id: driver_id,
-      cancelled: cancelled,
-      cancellation_time: cancellation_time
-    }
-
-    //store into matched db table
+    // store into matched db table
+    insertIntoUnmatched(unmatchedRideBatch, matchedRideBatch);
   }
+};
 
-  ride_id += 1;
-  start_unix += 3600;
-}
+module.exports = generateFakeData;
 
+// lat: -122.75 - -121.75
+// log: 36.8 - 37.8
 
+// timestamp range: 1483228800 (1/1/2017) - 1491004800 (4/1/2017)
 
-lat: -122.75 - -121.75
-log: 36.8 - 37.8
+// //unmatched rides
+// 1. Ride_ID (1-5 million) (auto generated by cassandra)
+// 2. Timestamp
+// 3. Rider_ID
+// 4. Rider Start_Loc_Lat
+// 5. Rider Start_Loc_Long
+// 6. Rider End_Loc_Lat
+// 7. Rider End_Loc_Long
 
-timestamp range: 1483228800 (1/1/2017) - 1491004800 (4/1/2017)
-
-
-//unmatched rides
-1. Ride_ID (1-5 million) (auto generated by cassandra)
-2. Timestamp 
-3. Rider_ID 
-4. Rider Start_Loc_Lat 
-5. Rider Start_Loc_Long
-6. Rider End_Loc_Lat 
-7. Rider End_Loc_Long
-
-
-//matched rides
-1. Ride_ID (1-5 million; same as above)
-2. Timestamp (3 month period, day-by-day; same as above)
-3. Rider_ID (same as above)
-4. Rider Start_Loc_Lat
-5. Rider Start_Loc_Long
-6. Rider End_Loc_Lat
-7. Rider End_Loc_Long
-8. Wait_Est
-9. Driver_ID
-10. Cancelled or Not Cancelled (fake data generated by me)
-11. Cancellation_time if cancelled (Handled by my service)
-
+// //matched rides
+// 1. Ride_ID (1-5 million; same as above)
+// 2. Timestamp (3 month period, day-by-day; same as above)
+// 3. Rider_ID (same as above)
+// 4. Rider Start_Loc_Lat
+// 5. Rider Start_Loc_Long
+// 6. Rider End_Loc_Lat
+// 7. Rider End_Loc_Long
+// 8. Wait_Est
+// 9. Driver_ID
+// 10. Cancelled or Not Cancelled (fake data generated by me)
+// 11. Cancellation_time if cancelled (Handled by my service)
