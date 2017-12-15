@@ -29,6 +29,7 @@
     "cassandra-driver": "^3.3.0",
     "chai": "^4.1.2",
     "dotenv": "^4.0.0",
+    "elasticsearch": "^14.0.0",
     "express": "^4.16.2",
     "faker": "^4.1.0",
     "mocha": "^4.0.1",
