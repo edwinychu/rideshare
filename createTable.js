@@ -1,5 +1,4 @@
 const cassandra = require('cassandra-driver');
-const async = require('async');
 const Promise = require('bluebird');
 
 const client = new cassandra.Client({ contactPoints: ['127.0.0.1'], keyspace: 'rideshare' });
@@ -8,10 +7,10 @@ client.connect();
 
 const createTables = () => {
   const queryUnmatched =
-    'CREATE TABLE IF NOT EXISTS rideshare.unmatched (ride_id text PRIMARY KEY, timestamp int, rider_id int, rider_start text, rider_end text)';
+    "CREATE TABLE IF NOT EXISTS rideshare.newrides (ride_id text PRIMARY KEY, timestamp int, rider_id int, rider_start text, rider_end text) WITH caching = { 'keys' : 'ALL','rows_per_partition' : 'ALL'}";
 
   const queryMatched =
-    'CREATE TABLE IF NOT EXISTS rideshare.matched (ride_id text PRIMARY KEY, timestamp int, rider_id int, rider_start text, rider_end text, wait_est int, driver_id int, cancelled int, cancellation_time int)';
+    "CREATE TABLE IF NOT EXISTS rideshare.matchedrides (ride_id text PRIMARY KEY, timestamp int, rider_id int, rider_start text, rider_end text, wait_est int, driver_id int, cancelled int, cancellation_time int) WITH caching = { 'keys' : 'ALL','rows_per_partition' : 'ALL'}";
 
   return new Promise((resolve, reject) => {
     client.execute(queryUnmatched, (err) => {

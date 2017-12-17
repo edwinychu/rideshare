@@ -28,6 +28,7 @@ app.post('/polling', (req, res) => {
 
 // initial bookings from client
 app.post('/bookings', (req, res) => {
+  console.log(req.body);
   // deployed version
   const riderInfo = req.body; // rider_id, start_loc, end_loc
   const rideId = unique();
@@ -62,21 +63,20 @@ app.post('/updated', (req, res) => {
   // deployed version
   const updatedRideInfo = req.body; // contains ride_id, driver_id, wait_est
   const { ride_id } = req.body;
-
   // update unmatched ride_id in database and store unmatched ride_id in cache
   db.updateUnmatchedRideInfo(ride_id, updatedRideInfo).then(() => {
     console.log('Updated ride!');
   });
 });
 
-//client sends either cancelled or completed status
+// client sends either cancelled or completed status
 app.post('/cancelled', (req, res) => {
   const { cancelledStatus } = req.body;
   const { ride_id } = req.body;
 
   // Cancelled Status should be determined by client
   // const cancelledStatus = Math.floor(Math.random() * (2 - 0));
-  // this service calculated cancellation time 
+  // this service calculated cancellation time
   let cancellationTime;
   if (cancelledStatus) {
     if (waitEst > 5) {

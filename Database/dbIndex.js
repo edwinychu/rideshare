@@ -6,16 +6,25 @@ const client = new cassandra.Client({ contactPoints: ['127.0.0.1'], keyspace: 'r
 client.connect();
 
 const saveUnmatchedRideInfo = (riderInfo) => {
+  console.log(riderInfo);
   const { ride_id } = riderInfo;
   const { rider_id } = riderInfo;
   const { start_loc } = riderInfo;
   const { end_loc } = riderInfo;
   const { timestamp } = riderInfo;
   const query =
-    'INSERT INTO rideshare.newrides (ride_id, timestamp, rider_id, rider_start, rider_end, wait_est, driver_id, cancelled, cancellation_time) VALUES (?, ?, ?, ?, ?)';
-  const prepared = client.prepare(query);
+    'INSERT INTO rideshare.newrides (ride_id, timestamp, rider_id, rider_start, rider_end) VALUES (?, ?, ?, ?, ?)';
+  const params = [ride_id, timestamp, rider_id, start_loc, end_loc];
 
-  client.execute(prepared, (ride_id, timestamp, rider_id, start_loc, end_loc));
+  return new Promise((resolve, reject) => {
+    client.execute(query, params, { prepare: true }, (err) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve();
+      }
+    });
+  });
 };
 
 const updateUnmatchedRideInfo = (ride_id, updatedRideInfo) => {
@@ -45,19 +54,16 @@ const updateUnmatchedRideInfo = (ride_id, updatedRideInfo) => {
     // inserts new matched ride into rideshare.matchedrides
     const matchedQuery =
       'INSERT INTO rideshare.matchedrides (ride_id, timestamp, rider_id, rider_start, rider_end, wait_est, driver_id, cancelled, cancellation_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)';
-    const prepared = client.prepare(matchedQuery);
+    const params = [ride_id, timestamp, rider_id, start_loc, end_loc, waitEst, driver_id, 0, 0];
+
     new Promise((resolve, reject) => {
-      client.execute(
-        prepared,
-        (ride_id, timestamp, rider_id, start_loc, end_loc, waitEst, driver_id, null, null),
-        (err) => {
-          if (err) {
-            reject(err);
-          } else {
-            resolve();
-          }
-        },
-      );
+      client.execute(matchedQuery, params, { prepare: true }, (err) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve();
+        }
+      });
     });
   });
 };
