@@ -1,7 +1,9 @@
 const express = require('express');
 const dotenv = require('dotenv');
 const db = require('../Database/dbIndex.js');
-const generateFakeData = require('../fakeData.js');
+const unique = require('uuid/v4');
+const axios = require('axios');
+const bodyparser = require('body-parser');
 
 dotenv.config();
 
@@ -9,16 +11,98 @@ const app = express();
 
 const PORT = process.env.PORT || 8080;
 
-// creates new tables in Cassandra and then generates/inserts fake data into it
-db.createTables().then(() => {
-  generateFakeData();
+app.use(bodyparser.json());
+
+// for client polling
+app.post('/polling', (req, res) => {
+  const { rideId } = req.body;
+  db.getRideInfo(rideId).then((ride) => {
+    if (ride.wait_est !== null) {
+      const waitEst = { wait_est: ride.wait_est };
+      res.json(waitEst);
+    } else {
+      res.send('No driver matches yet.');
+    }
+  });
 });
 
 // initial bookings from client
-app.post('/bookings', (req, res) => {});
+app.post('/bookings', (req, res) => {
+  // deployed version
+  const riderInfo = req.body; // rider_id, start_loc, end_loc
+  const rideId = unique();
+  const { rider_start } = req.body;
+  const startLoc = `POINT(${rider_start})`;
 
-// updated ride_id's from Dispatch service
-app.post('/updated', (req, res) => {});
+  // generate timestamp with unix date at that moment
+  riderInfo.ride_id = rideId;
+  riderInfo.timestamp = Date.now();
+  db
+    .saveUnmatchedRideInfo(riderInfo)
+    .then(() => {
+      const inventoryRideInfo = {
+        start_loc: startLoc,
+        ride_id: rideId,
+      };
+      axios.post('http://localhost:8080/new_ride', inventoryRideInfo);
+    })
+    .then(() => {
+      // sends back ride id so client can poll the service continously
+      const rideIdObj = { ride_id: rideId };
+      res.json(rideIdObj);
+    });
+});
+
+app.post('/new_ride', (req, res) => {
+  console.log('sent to inventory!');
+});
+
+// getting updated ride_id's from Dispatch service
+app.post('/updated', (req, res) => {
+  // deployed version
+  const updatedRideInfo = req.body; // contains ride_id, driver_id, wait_est
+  const { ride_id } = req.body;
+
+  // update unmatched ride_id in database and store unmatched ride_id in cache
+  db.updateUnmatchedRideInfo(ride_id, updatedRideInfo).then(() => {
+    console.log('Updated ride!');
+  });
+});
+
+//client sends either cancelled or completed status
+app.post('/cancelled', (req, res) => {
+  const { cancelledStatus } = req.body;
+  const { ride_id } = req.body;
+
+  // Cancelled Status should be determined by client
+  // const cancelledStatus = Math.floor(Math.random() * (2 - 0));
+  // this service calculated cancellation time 
+  let cancellationTime;
+  if (cancelledStatus) {
+    if (waitEst > 5) {
+      cancellationTime = Math.floor(Math.random() * (3 - 1) + 1);
+    } else {
+      cancellationTime = Math.floor(Math.random() * (waitEst - 1) + 1);
+    }
+  } else {
+    cancellationTime = 0;
+  }
+
+  // retrieve ride_id from db
+  db.getRideInfo(ride_id).then((ride) => {
+    const updatedRideInfo = ride;
+    console.log(ride);
+    // attach cancellation Time and cancelled status onto data
+    updatedRideInfo.cancellationTime = cancellationTime;
+    updatedRideInfo.cancelledStatus = cancelledStatus;
+    // only in deployed version
+    axios.post('http://localhost:8080/message_bus', updatedRideInfo);
+  });
+});
+
+app.post('/message_bus', (req, res) => {
+  console.log('finished sending to message bus');
+});
 
 app.get('/', (req, res) => {
   res.status(200).json({ message: 'Hello World!' });

@@ -12,7 +12,7 @@ const createDataByHours = () => {
   const matchedRideBatch = [];
   for (let j = 0; j < 40; j += 1) {
     const rideId = unique();
-    const timeStamp = Math.floor(Math.random() * (i + 40 - i) + i);
+    const timeStamp = Math.floor(Math.random() * (i + 60 - i) + i);
     const riderId = Math.floor(Math.random() * 5000000);
 
     const riderStartLog = (Math.random() * (-121.75 - -122.75) + -122.75).toFixed(2);
@@ -89,7 +89,7 @@ const createDataByHours = () => {
     unmatched: unmatchedRideBatch,
     matched: matchedRideBatch,
   };
-  i += 40;
+  i += 60;
   return batches;
 };
 

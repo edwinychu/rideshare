@@ -7,10 +7,6 @@ const client = new cassandra.Client({ contactPoints: ['127.0.0.1'], keyspace: 'r
 client.connect();
 
 const createTables = () => {
-  const deleteUnmatched = 'DROP TABLE IF EXISTS rideshare.unmatched';
-
-  const deleteMatched = 'DROP TABLE IF EXISTS rideshare.matched';
-
   const queryUnmatched =
     'CREATE TABLE IF NOT EXISTS rideshare.unmatched (ride_id text PRIMARY KEY, timestamp int, rider_id int, rider_start text, rider_end text)';
 
