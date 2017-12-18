@@ -43,7 +43,7 @@ const createDataByHours = () => {
         cancellationTime = Math.floor(Math.random() * (waitEst - 1) + 1);
       }
     } else {
-      cancellationTime = 0;
+      cancellationTime = null;
     }
 
     const matchedRide = {

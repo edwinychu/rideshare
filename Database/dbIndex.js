@@ -5,7 +5,7 @@ const client = new cassandra.Client({ contactPoints: ['127.0.0.1'], keyspace: 'r
 
 client.connect();
 
-async function saveUnmatchedRideInfo(riderInfo) {
+function saveUnmatchedRideInfo(riderInfo) {
   const { ride_id } = riderInfo;
   const { rider_id } = riderInfo;
   const { start_loc } = riderInfo;
@@ -15,80 +15,71 @@ async function saveUnmatchedRideInfo(riderInfo) {
     'INSERT INTO rideshare.newrides (ride_id, timestamp, rider_id, rider_start, rider_end) VALUES (?, ?, ?, ?, ?)';
   const params = [ride_id, timestamp, rider_id, start_loc, end_loc];
 
-  return client.execute(query, params, { prepare: true }, (err) => {
+  client.execute(query, params, { prepare: true }, err => {
     if (err) {
       console.log(err);
     }
   });
 }
 
-const updateUnmatchedRideInfo = (ride_id, updatedRideInfo) => {
+async function updateUnmatchedRideInfo(ride_id, updatedRideInfo) {
   console.log(updatedRideInfo);
-
   const { waitEst } = updatedRideInfo;
   const { driver_id } = updatedRideInfo;
 
   // grabs unmatched ride_id from cache
   const newQuery = `SELECT * FROM rideshare.newrides WHERE ride_id = ${rideId}`;
 
-  return new Promise((resolve, reject) => {
-    client.execute(newQuery, (err) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve();
-      }
-    });
-  }).then((ride) => {
-    // updates the unmatched ride_id with updated Ride Info
-    const { ride_id } = ride;
-    const { rider_id } = ride;
-    const { start_loc } = ride;
-    const { end_loc } = ride;
-    const { timestamp } = ride;
-    // inserts new matched ride into rideshare.matchedrides
-    const matchedQuery =
-      'INSERT INTO rideshare.matchedrides (ride_id, timestamp, rider_id, rider_start, rider_end, wait_est, driver_id, cancelled, cancellation_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)';
-    const params = [ride_id, timestamp, rider_id, start_loc, end_loc, waitEst, driver_id, 0, 0];
-
-    new Promise((resolve, reject) => {
-      client.execute(matchedQuery, params, { prepare: true }, (err) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve();
-        }
-      });
-    });
+  const ride = await client.execute(newQuery, err => {
+    if (err) {
+      reject(err);
+    } else {
+      resolve();
+    }
   });
-};
+  // updates the unmatched ride_id with updated Ride Info
+  const { ride_id } = ride;
+  const { rider_id } = ride;
+  const { start_loc } = ride;
+  const { end_loc } = ride;
+  const { timestamp } = ride;
+  // inserts new matched ride into rideshare.matchedrides
+  const matchedQuery =
+    'INSERT INTO rideshare.matchedrides (ride_id, timestamp, rider_id, rider_start, rider_end, wait_est, driver_id, cancelled, cancellation_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)';
+  const params = [ride_id, timestamp, rider_id, start_loc, end_loc, waitEst, driver_id, 0, 0];
+  client.execute(matchedQuery, params, { prepare: true }, err => {
+    if (err) {
+      reject(err);
+    } else {
+      resolve();
+    }
+  });
+}
 
-const getRideInfo = (rideId) => {
+async function getRideInfo(rideId) {
   // grabs ride from rideshare.matchedrides cache after user cancels
   const query = `SELECT * FROM rideshare.matchedrides WHERE ride_id = ${rideId}`;
-  return new Promise((resolve, reject) => {
-    client.execute(query, (err) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve();
-      }
-    });
+  const ride = await client.execute(query, err => {
+    if (err) {
+      reject(err);
+    } else {
+      resolve();
+    }
   });
-};
+  return ride;
+}
 
-const getMatchedRideInfo = (rideId) => {
+async function getMatchedRideInfo(rideId) {
   const query = `SELECT * FROM rideshare.matched WHERE ride_id = ${rideId}`;
-  return new Promise((resolve, reject) => {
-    client.execute(query, (err) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve();
-      }
-    });
+  const ride = await client.execute(query, err => {
+    if (err) {
+      reject(err);
+    } else {
+      resolve();
+    }
   });
-};
+  return ride;
+}
 
 module.exports.getMatchedRideInfo = getMatchedRideInfo;
 module.exports.saveUnmatchedRideInfo = saveUnmatchedRideInfo;

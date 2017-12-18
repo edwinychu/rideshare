@@ -30,7 +30,6 @@ app.post('/polling', (req, res) => {
 app.post('/bookings', async (req, res) => {
   // deployed version
   const riderInfo = req.body; // rider_id, start_loc, end_loc
-
   if (typeof riderInfo.rider_id === 'string') {
     riderInfo.rider_id = parseInt(riderInfo.rider_id);
   }
@@ -40,18 +39,19 @@ app.post('/bookings', async (req, res) => {
   // generate timestamp with unix date at that moment
   riderInfo.ride_id = rideId;
   riderInfo.timestamp = Math.round(Date.now() / 1000);
-  await db.saveUnmatchedRideInfo(riderInfo);
+  db.saveUnmatchedRideInfo(riderInfo);
   const inventoryRideInfo = {
     start_loc: startLoc,
     ride_id: rideId,
   };
-  await axios.post('http://localhost:8080/new_ride', inventoryRideInfo);
-  // sends back ride id so client can poll the service continously
-  const rideIdObj = { ride_id: rideId };
-  res.json(rideIdObj);
+  // await axios.post('http://localhost:8080/new_ride', inventoryRideInfo).catch((err) => {});
+  res.end();
+  // res.send(rideId);
 });
 
-app.post('/new_ride', (req, res) => {});
+app.post('/new_ride', (req, res) => {
+  res.end();
+});
 
 // getting updated ride_id's from Dispatch service
 app.post('/updated', async (req, res) => {
@@ -84,7 +84,6 @@ app.post('/cancelled', (req, res) => {
   // retrieve ride_id from db
   db.getRideInfo(ride_id).then((ride) => {
     const updatedRideInfo = ride;
-    console.log(ride);
     // attach cancellation Time and cancelled status onto data
     updatedRideInfo.cancellationTime = cancellationTime;
     updatedRideInfo.cancelledStatus = cancelledStatus;
@@ -95,6 +94,7 @@ app.post('/cancelled', (req, res) => {
 
 app.post('/message_bus', (req, res) => {
   console.log('finished sending to message bus');
+  res.end();
 });
 
 app.get('/', (req, res) => {
