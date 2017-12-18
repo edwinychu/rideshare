@@ -5,8 +5,7 @@ const client = new cassandra.Client({ contactPoints: ['127.0.0.1'], keyspace: 'r
 
 client.connect();
 
-const saveUnmatchedRideInfo = (riderInfo) => {
-  console.log(riderInfo);
+async function saveUnmatchedRideInfo(riderInfo) {
   const { ride_id } = riderInfo;
   const { rider_id } = riderInfo;
   const { start_loc } = riderInfo;
@@ -16,16 +15,12 @@ const saveUnmatchedRideInfo = (riderInfo) => {
     'INSERT INTO rideshare.newrides (ride_id, timestamp, rider_id, rider_start, rider_end) VALUES (?, ?, ?, ?, ?)';
   const params = [ride_id, timestamp, rider_id, start_loc, end_loc];
 
-  return new Promise((resolve, reject) => {
-    client.execute(query, params, { prepare: true }, (err) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve();
-      }
-    });
+  return client.execute(query, params, { prepare: true }, (err) => {
+    if (err) {
+      console.log(err);
+    }
   });
-};
+}
 
 const updateUnmatchedRideInfo = (ride_id, updatedRideInfo) => {
   console.log(updatedRideInfo);
