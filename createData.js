@@ -38,7 +38,7 @@ const createDataByHours = () => {
     let cancellationTime;
     if (cancelledStatus) {
       if (waitEst > 5) {
-        cancellationTime = Math.floor(Math.random() * (3 - 1) + 1);
+        cancellationTime = Math.floor(Math.random() * (3 - 0) + 0);
       } else {
         cancellationTime = Math.floor(Math.random() * (waitEst - 1) + 1);
       }

@@ -1,3 +1,4 @@
+// const newrelic = require('newrelic');
 const express = require('express');
 const dotenv = require('dotenv');
 const db = require('../Database/dbIndex.js');
@@ -15,11 +16,13 @@ app.use(bodyparser.json());
 
 // for client polling
 app.post('/polling', (req, res) => {
-  const { rideId } = req.query;
-  db.getRideInfo(rideId).then((ride) => {
-    if (ride.wait_est !== null) {
-      const waitEst = { wait_est: ride.wait_est };
-      res.json(waitEst);
+  db.getRideInfo(req.body.rideId).then((ride) => {
+    if (ride !== undefined) {
+      if (ride.wait_est !== null) {
+        res.json({ wait_est: ride.wait_est });
+      } else {
+        res.send('No driver matches yet.');
+      }
     } else {
       res.send('No driver matches yet.');
     }
@@ -29,21 +32,21 @@ app.post('/polling', (req, res) => {
 // initial bookings from client
 app.post('/bookings', async (req, res) => {
   // deployed version
-  const riderInfo = req.body; // rider_id, start_loc, end_loc
-  if (typeof riderInfo.rider_id === 'string') {
-    riderInfo.rider_id = parseInt(riderInfo.rider_id);
-  }
-  const rideId = unique();
-  const startLoc = `POINT(${riderInfo.start_loc})`;
+  // const riderInfo = req.body; // rider_id, start_loc, end_loc
+
+  // const startLoc = `POINT(${riderInfo.start_loc})`;
 
   // generate timestamp with unix date at that moment
-  riderInfo.ride_id = rideId;
-  riderInfo.timestamp = Math.round(Date.now() / 1000);
-  db.saveUnmatchedRideInfo(riderInfo);
-  const inventoryRideInfo = {
-    start_loc: startLoc,
-    ride_id: rideId,
-  };
+  // riderInfo.ride_id = unique();
+  // riderInfo.timestamp = Math.round(Date.now() / 1000);
+
+  req.body.ride_id = unique();
+  req.body.timestamp = Math.round(Date.now() / 1000);
+  db.saveUnmatchedRideInfo(req.body);
+  // const inventoryRideInfo = {
+  //   start_loc: startLoc,
+  //   ride_id: rideId,
+  // };
   // await axios.post('http://localhost:8080/new_ride', inventoryRideInfo).catch((err) => {});
   res.end();
   // res.send(rideId);
@@ -56,22 +59,19 @@ app.post('/new_ride', (req, res) => {
 // getting updated ride_id's from Dispatch service
 app.post('/updated', async (req, res) => {
   // deployed version
-  const updatedRideInfo = req.body; // contains ride_id, driver_id, wait_est
-  const { ride_id } = req.body;
+  // contains ride_id, driver_id, wait_est
   // update unmatched ride_id in database and store unmatched ride_id in cache
-  db.updateUnmatchedRideInfo(ride_id, updatedRideInfo);
+  db.updateUnmatchedRideInfo(req.body.ride_id, req.body);
+  res.end();
 });
 
 // client sends either cancelled or completed status
 app.post('/cancelled', (req, res) => {
-  const { cancelledStatus } = req.body;
-  const { ride_id } = req.body;
-
   // Cancelled Status should be determined by client
   // const cancelledStatus = Math.floor(Math.random() * (2 - 0));
   // this service calculated cancellation time
   let cancellationTime;
-  if (cancelledStatus) {
+  if (req.body.cancelledStatus) {
     if (waitEst > 5) {
       cancellationTime = Math.floor(Math.random() * (3 - 1) + 1);
     } else {
@@ -82,18 +82,18 @@ app.post('/cancelled', (req, res) => {
   }
 
   // retrieve ride_id from db
-  db.getRideInfo(ride_id).then((ride) => {
+  db.getRideInfo(req.body.ride_id).then((ride) => {
     const updatedRideInfo = ride;
     // attach cancellation Time and cancelled status onto data
-    updatedRideInfo.cancellationTime = cancellationTime;
-    updatedRideInfo.cancelledStatus = cancelledStatus;
+    ride.cancellationTime = cancellationTime;
+    ride.cancelledStatus = cancelledStatus;
     // only in deployed version
     axios.post('http://localhost:8080/message_bus', updatedRideInfo);
   });
+  res.end();
 });
 
 app.post('/message_bus', (req, res) => {
-  console.log('finished sending to message bus');
   res.end();
 });
 

@@ -6,7 +6,8 @@
   "scripts": {
     "test": "./node_modules/.bin/mocha ./Tests --exit",
     "start": "node ./Server/serverIndex.js",
-    "start:dev": "nodemon ./Server/serverIndex.js"
+    "start:express": "nodemon ./Server/serverIndex.js",
+    "start:dev": "nodemon ./Server/rawNode.js"
   },
   "repository": {
     "type": "git",
@@ -34,6 +35,8 @@
     "express": "^4.16.2",
     "faker": "^4.1.0",
     "mocha": "^4.0.1",
+    "newrelic": "^2.4.2",
+    "querystring": "^0.2.0",
     "supertest": "^3.0.0",
     "uuid": "^3.1.0"
   },
