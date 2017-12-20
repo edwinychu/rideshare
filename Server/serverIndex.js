@@ -47,7 +47,9 @@ app.post('/bookings', async (req, res) => {
   //   start_loc: startLoc,
   //   ride_id: rideId,
   // };
-  // await axios.post('http://localhost:8080/new_ride', inventoryRideInfo).catch((err) => {});
+  // await axios.post('http://localhost:8080/new_ride', inventoryRideInfo).catch((err) => {
+
+  // });
   res.end();
   // res.send(rideId);
 });
@@ -71,27 +73,37 @@ app.post('/cancelled', (req, res) => {
   // const cancelledStatus = Math.floor(Math.random() * (2 - 0));
   // this service calculated cancellation time
   let cancellationTime;
-  if (req.body.cancelledStatus) {
-    if (waitEst > 5) {
+  if (req.body.cancelled) {
+    if (req.body.wait_est > 5) {
       cancellationTime = Math.floor(Math.random() * (3 - 1) + 1);
     } else {
-      cancellationTime = Math.floor(Math.random() * (waitEst - 1) + 1);
+      cancellationTime = Math.floor(Math.random() * (req.body.wait_est - 1) + 1);
     }
   } else {
-    cancellationTime = 0;
+    cancellationTime = null;
   }
 
+  
+
   // retrieve ride_id from db
-  db.getRideInfo(req.body.ride_id).then((ride) => {
-    const updatedRideInfo = ride;
-    // attach cancellation Time and cancelled status onto data
-    ride.cancellationTime = cancellationTime;
-    ride.cancelledStatus = cancelledStatus;
-    // only in deployed version
-    axios.post('http://localhost:8080/message_bus', updatedRideInfo);
-  });
+  let results = db.getRideInfo(req.body.ride_id, cancellationTime, req.body.cancelled);
+
+  getShitFromDb()
+  // .then((ride) => {
+  //   const updatedRideInfo = ride;
+  //   // attach cancellation Time and cancelled status onto data
+  //   ride.cancellationTime = cancellationTime;
+  //   ride.cancelledStatus = cancelledStatus;
+  //   // only in deployed version
+  //   axios.post('http://localhost:8080/message_bus', updatedRideInfo);
+  // });
   res.end();
 });
+
+async function getShitFromDb(ride_id, cancellationTime, cancelled) {
+  let results = await db.getRideInfo(ride_id, cancellationTime, cancelled);
+
+} 
 
 app.post('/message_bus', (req, res) => {
   res.end();

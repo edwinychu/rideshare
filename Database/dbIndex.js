@@ -1,5 +1,5 @@
 const cassandra = require('cassandra-driver');
-const Promise = require('bluebird');
+const axios = require('axios');
 
 const client = new cassandra.Client({ contactPoints: ['127.0.0.1'], keyspace: 'rideshare' });
 
@@ -50,10 +50,21 @@ async function updateUnmatchedRideInfo(rideId, updatedRideInfo) {
   });
 }
 
-function getRideInfo(rideId) {
+function getRideInfo(rideId, cancellationTime, cancelledStatus) {
   // grabs ride from rideshare.matchedrides cache after user cancels
-  const query = 'SELECT * FROM rideshare.matchedrides,WHERE ride_id=?';
-  client.execute(query, [rideId], { prepare: true }, (err, results) => results);
+  const query = 'SELECT * FROM rideshare.matchedrides WHERE ride_id=?';
+  return client
+    .execute(query, [rideId], { prepare: true })
+    .then((results) => {
+      const ride = results.rows[0];
+
+      // attach cancellation Time and cancelled status onto data
+      ride.cancellation_time = cancellationTime;
+      ride.cancelled = cancelledStatus;
+      // only in deployed version
+      axios.post('http://localhost:8080/message_bus', ride);
+    })
+    .catch(err => console.log(err));
 }
 
 module.exports.saveUnmatchedRideInfo = saveUnmatchedRideInfo;
