@@ -23,48 +23,46 @@ function saveUnmatchedRideInfo(riderInfo) {
 }
 
 async function updateUnmatchedRideInfo(rideId, updatedRideInfo) {
-  const { waitEst } = updatedRideInfo;
-  const { driver_id } = updatedRideInfo;
-
   // grabs unmatched ride_id from cache
   const newQuery = 'SELECT * FROM rideshare.newrides WHERE ride_id=?';
-  // const ride = await client.execute(newQuery, [`'${rideId}'`], { prepare: true }, (err,) => {});
-
-  client.execute(newQuery, [rideId], { prepare: true }, (err, results) => {
-    const ride = results.rows[0];
-    // inserts new matched ride into rideshare.matchedrides
-    const matchedQuery =
-      'INSERT INTO rideshare.matchedrides (ride_id, timestamp, rider_id, rider_start, rider_end, wait_est, driver_id, cancelled, cancellation_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)';
-    const params = [
-      rideId,
-      ride.timestamp,
-      ride.rider_id,
-      ride.start_loc,
-      ride.end_loc,
-      waitEst,
-      driver_id,
-      0,
-      0,
-    ];
-    client.execute(matchedQuery, params, { prepare: true }, (err) => {});
-  });
+  const results = await client.execute(newQuery, [rideId], { prepare: true });
+  const ride = results.rows[0];
+  // inserts new matched ride into rideshare.matchedrides
+  const matchedQuery =
+    'INSERT INTO rideshare.matchedrides (ride_id, timestamp, rider_id, rider_start, rider_end, wait_est, driver_id, cancelled, cancellation_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)';
+  const params = [
+    rideId,
+    ride.timestamp,
+    ride.rider_id,
+    ride.rider_start,
+    ride.rider_end,
+    updatedRideInfo.wait_est,
+    updatedRideInfo.driver_id,
+    0,
+    0,
+  ];
+  client.execute(matchedQuery, params, { prepare: true }, (err) => {});
 }
 
-function getRideInfo(rideId, cancellationTime, cancelledStatus) {
+async function getRideInfo(rideId, cancellationTime, cancelledStatus) {
   // grabs ride from rideshare.matchedrides cache after user cancels
   const query = 'SELECT * FROM rideshare.matchedrides WHERE ride_id=?';
-  return client
-    .execute(query, [rideId], { prepare: true })
-    .then((results) => {
-      const ride = results.rows[0];
+  const results = await client.execute(query, [rideId], { prepare: true });
 
-      // attach cancellation Time and cancelled status onto data
-      ride.cancellation_time = cancellationTime;
-      ride.cancelled = cancelledStatus;
-      // only in deployed version
-      axios.post('http://localhost:8080/message_bus', ride);
-    })
-    .catch(err => console.log(err));
+  const ride = results.rows[0];
+  return ride;
+  // return client
+  //   .execute(query, [rideId], { prepare: true })
+  //   .then((results) => {
+  //     const ride = results.rows[0];
+
+  //     // attach cancellation Time and cancelled status onto data
+  //     ride.cancellation_time = cancellationTime;
+  //     ride.cancelled = cancelledStatus;
+  //     // only in deployed version
+  //     axios.post('http://localhost:8080/message_bus', ride);
+  //   })
+  //   .catch(err => console.log(err));
 }
 
 module.exports.saveUnmatchedRideInfo = saveUnmatchedRideInfo;
