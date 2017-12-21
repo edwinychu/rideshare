@@ -30,9 +30,6 @@ app.post('/polling', (req, res) => {
 app.post('/bookings', async (req, res) => {
   // deployed version
   const riderInfo = req.body; // rider_id, start_loc, end_loc
-  if (typeof riderInfo.rider_id === 'string') {
-    riderInfo.rider_id = parseInt(riderInfo.rider_id);
-  }
   const rideId = unique();
   const startLoc = `POINT(${riderInfo.start_loc})`;
 
@@ -40,10 +37,10 @@ app.post('/bookings', async (req, res) => {
   riderInfo.ride_id = rideId;
   riderInfo.timestamp = Math.round(Date.now() / 1000);
   db.saveUnmatchedRideInfo(riderInfo);
-  const inventoryRideInfo = {
-    start_loc: startLoc,
-    ride_id: rideId,
-  };
+  // const inventoryRideInfo = {
+  //   start_loc: startLoc,
+  //   ride_id: rideId,
+  // };
   // await axios.post('http://localhost:8080/new_ride', inventoryRideInfo).catch((err) => {});
   res.end();
   // res.send(rideId);
