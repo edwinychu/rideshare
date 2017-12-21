@@ -9,7 +9,7 @@ const kue = require('kue');
 const redisClient = require('../Database/redis.js');
 
 dotenv.config();
-process.setMaxListeners(Infinity);
+
 const app = express();
 const queue = kue.createQueue();
 
@@ -150,24 +150,10 @@ app.post('/message_bus', (req, res) => {
 });
 
 app.get('/', (req, res) => {
-  queue
-    .create('initial', '')
-    .attempts(3)
-    .save((err) => {
-      if (!err) {
-        res.status(200).end();
-      } else {
-        console.log(err);
-        res.status(200).end();
-      }
-    });
+  res.status(200).end();
 });
 
 // checks queue continuously
-queue.process('initial', (job, done) => {
-  done();
-});
-
 queue.process('booking', (job, done) => {
   db.saveUnmatchedRideInfo(job);
   done();
