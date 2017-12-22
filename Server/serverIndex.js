@@ -5,12 +5,23 @@ const db = require('../Database/dbIndex.js');
 const unique = require('uuid/v4');
 const axios = require('axios');
 const bodyparser = require('body-parser');
+const AWS = require('aws-sdk');
 
 dotenv.config();
 
 const app = express();
 
 const PORT = process.env.PORT || 8080;
+
+const sqs = new AWS.SQS({
+  region: 'us-west-1',
+  maxRetries: 15,
+  apiVersion: '2012-11-05',
+  credentials: new AWS.Credentials({
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  }),
+});
 
 app.use(bodyparser.json());
 
@@ -29,12 +40,10 @@ app.post('/polling', async (req, res) => {
 
 app.post('/bookings', (req, res) => {
   const startLoc = `POINT(${req.body.start_loc})`;
-
   req.body.ride_id = unique();
   req.body.timestamp = Math.round(Date.now() / 1000);
 
   db.saveUnmatchedRideInfo(req.body);
-
   const inventoryRideInfo = {
     start_loc: startLoc,
     ride_id: req.body.ride_id,
@@ -58,23 +67,52 @@ app.post('/updated', (req, res) => {
 app.post('/cancelled', async (req, res) => {
   // const cancelledStatus = Math.floor(Math.random() * (2 - 0));
 
+  const ride = await db.getRideInfo(req.body.ride_id);
+
   let cancellationTime;
+  let driverLoc;
   if (req.body.cancelled) {
+    driverLoc = ride.rider_start;
     if (req.body.wait_est > 5) {
       cancellationTime = Math.floor(Math.random() * (3 - 1) + 1);
     } else {
       cancellationTime = Math.floor(Math.random() * (req.body.wait_est - 1) + 1);
     }
   } else {
+    driverLoc = ride.rider_end;
     cancellationTime = null;
   }
-
-  const ride = await db.getRideInfo(req.body.ride_id);
 
   ride.cancellationTime = cancellationTime;
   ride.cancelledStatus = req.body.cancelled;
 
-  // axios.post('http://localhost:8080/message_bus', ride);
+  const driver = {
+    driver_id: ride.driver_id,
+    driver_loc: `POINT(${driverLoc})`,
+  };
+  const inventoryParam = {
+    MessageBody: `${JSON.stringify(driver)}`,
+    QueueUrl: 'https://sqs.us-west-1.amazonaws.com/017172236060/rideshare-dev-complete-driver',
+    DelaySeconds: 0,
+  };
+
+  const analyticsParam = {
+    MessageBody: `${JSON.stringify(ride)}`,
+    QueueUrl: 'https://sqs.us-west-1.amazonaws.com/017172236060/rideshare-dev-cancels',
+    DelaySeconds: 0,
+  };
+
+  sqs.sendMessage(inventoryParam, (err, data) => {
+    if (err) {
+      console.log('failed');
+    }
+  });
+
+  sqs.sendMessage(analyticsParam, (err, data) => {
+    if (err) {
+      console.log('failed');
+    }
+  });
 
   res.end();
 });
