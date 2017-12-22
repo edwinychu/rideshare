@@ -39,13 +39,14 @@ app.post('/polling', async (req, res) => {
 });
 
 app.post('/bookings', (req, res) => {
-  const startLoc = `POINT(${req.body.start_loc})`;
+  req.body.start_loc = `POINT(${req.body.start_loc})`;
+  req.body.end_loc = `POINT(${req.body.end_loc})`;
   req.body.ride_id = unique();
   req.body.timestamp = Math.round(Date.now() / 1000);
 
   db.saveUnmatchedRideInfo(req.body);
   const inventoryRideInfo = {
-    start_loc: startLoc,
+    start_loc: req.body.start_loc,
     ride_id: req.body.ride_id,
   };
   // axios.post('http://localhost:8080/new_ride', inventoryRideInfo).catch((err) => {
@@ -92,13 +93,13 @@ app.post('/cancelled', async (req, res) => {
   };
   const inventoryParam = {
     MessageBody: `${JSON.stringify(driver)}`,
-    QueueUrl: 'https://sqs.us-west-1.amazonaws.com/017172236060/rideshare-dev-complete-driver',
+    QueueUrl: process.env.QUEUE_URL_INVENTORY,
     DelaySeconds: 0,
   };
 
   const analyticsParam = {
     MessageBody: `${JSON.stringify(ride)}`,
-    QueueUrl: 'https://sqs.us-west-1.amazonaws.com/017172236060/rideshare-dev-cancels',
+    QueueUrl: process.env.QUEUE_URL_ANALYTICS,
     DelaySeconds: 0,
   };
 
