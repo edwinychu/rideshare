@@ -4,7 +4,9 @@
   "description": "ride server service for rideshare",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Hello\""
+    "test": "./node_modules/.bin/mocha ./Tests --exit",
+    "start": "node ./Server/serverIndex.js",
+    "start:dev": "nodemon ./Server/serverIndex.js"
   },
   "repository": {
     "type": "git",
@@ -15,5 +17,32 @@
   "bugs": {
     "url": "https://github.com/edwinychu/rideshare/issues"
   },
-  "homepage": "https://github.com/edwinychu/rideshare#readme"
+  "homepage": "https://github.com/edwinychu/rideshare#readme",
+  "dependencies": {
+    "async": "^2.6.0",
+    "aws-sdk": "^2.174.0",
+    "axios": "^0.17.1",
+    "babel-cli": "^6.26.0",
+    "babel-core": "^6.26.0",
+    "babel-preset-es2015": "^6.24.1",
+    "babel-preset-stage-1": "^6.24.1",
+    "bluebird": "^3.5.1",
+    "body-parser": "^1.18.2",
+    "cassandra-driver": "^3.3.0",
+    "chai": "^4.1.2",
+    "dotenv": "^4.0.0",
+    "elasticsearch": "^14.0.0",
+    "express": "^4.16.2",
+    "faker": "^4.1.0",
+    "mocha": "^4.0.1",
+    "supertest": "^3.0.0",
+    "uuid": "^3.1.0"
+  },
+  "devDependencies": {
+    "eslint": "^4.13.0",
+    "eslint-config-airbnb-base": "^12.1.0",
+    "eslint-plugin-import": "^2.8.0",
+    "nodemon": "^1.12.5",
+    "parallelshell": "^3.0.2"
+  }
 }

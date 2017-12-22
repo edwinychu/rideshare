@@ -1,0 +1,14 @@
+# OSX
+.DS_Store
+
+# environment variables
+.env
+
+# build
+build/
+
+# node modules
+node_modules/
+
+# vs code
+.vscode
