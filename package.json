@@ -6,7 +6,8 @@
   "scripts": {
     "test": "./node_modules/.bin/mocha ./Tests --exit",
     "start": "node ./Server/serverIndex.js",
-    "start:dev": "nodemon ./Server/serverIndex.js"
+    "start:dev": "nodemon ./Server/serverIndex.js",
+    "tables": "node ./createTable.js"
   },
   "repository": {
     "type": "git",
