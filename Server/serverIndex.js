@@ -89,7 +89,7 @@ app.post('/cancelled', async (req, res) => {
     driver_id: ride.driver_id,
     driver_loc: `POINT(${driverLoc})`,
   };
-  
+
   const inventoryParam = {
     MessageBody: `${JSON.stringify(driver)}`,
     QueueUrl: process.env.QUEUE_URL_INVENTORY,
@@ -118,7 +118,7 @@ app.post('/cancelled', async (req, res) => {
 });
 
 app.get('/', (req, res) => {
-  res.status(200).end();
+  res.status(200).end('Hello World!');
 });
 
 if (!module.parent) {
