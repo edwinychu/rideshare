@@ -1,9 +1,13 @@
 const cassandra = require('cassandra-driver');
 const axios = require('axios');
 
-const client = new cassandra.Client({ contactPoints: ['127.0.0.1'], keyspace: 'rideshare' });
+const client = new cassandra.Client({ contactPoints: ['localhost'] });
 
-client.connect();
+client
+  .connect()
+  .then(() =>
+    client.execute("CREATE KEYSPACE IF NOT EXISTS rideshare WITH replication = {'class':'SimpleStrategy', 'replication_factor' : 3}"))
+  .then(() => client.execute('USE rideshare'));
 
 function saveUnmatchedRideInfo(riderInfo) {
   const { ride_id } = riderInfo;

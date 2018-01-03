@@ -5,9 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "./node_modules/.bin/mocha ./Tests --exit",
-    "start": "node ./Server/serverIndex.js",
-    "start:dev": "nodemon ./Server/serverIndex.js",
-    "tables": "node ./createTable.js"
+    "start": "node ./Server/serverIndex.js && node ./createTable.js",
+    "start:dev": "nodemon ./Server/serverIndex.js"
   },
   "repository": {
     "type": "git",
@@ -29,7 +28,6 @@
     "dotenv": "^4.0.0",
     "elasticsearch": "^14.0.0",
     "express": "^4.16.2",
-    "faker": "^4.1.0",
     "mocha": "^4.0.1",
     "supertest": "^3.0.0",
     "uuid": "^3.1.0"
