@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "./node_modules/.bin/mocha ./Tests --exit",
-    "start": "node ./Server/serverIndex.js && node ./createTable.js",
+    "start": "node ./Server/serverIndex.js",
     "start:dev": "nodemon ./Server/serverIndex.js"
   },
   "repository": {

@@ -11,7 +11,7 @@ dotenv.config();
 
 const app = express();
 
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || 80;
 
 const sqs = new AWS.SQS({
   region: 'us-west-1',
