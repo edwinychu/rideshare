@@ -52,7 +52,7 @@ app.post('/bookings', (req, res) => {
   // axios.post('http://localhost:8080/new_ride', inventoryRideInfo).catch((err) => {
   // });
   res.send();
-  // res.send(rideId);
+  // res.send({rideId : req.body.ride_id});
 });
 
 app.post('/new_ride', (req, res) => {
@@ -60,14 +60,12 @@ app.post('/new_ride', (req, res) => {
 });
 
 app.post('/updated', (req, res) => {
-  // contains ride_id, driver_id, wait_est
   db.updateUnmatchedRideInfo(req.body.ride_id, req.body);
   res.end();
 });
 
 app.post('/cancelled', async (req, res) => {
   // const cancelledStatus = Math.floor(Math.random() * (2 - 0));
-
   const ride = await db.getRideInfo(req.body.ride_id);
 
   let cancellationTime;
@@ -91,6 +89,7 @@ app.post('/cancelled', async (req, res) => {
     driver_id: ride.driver_id,
     driver_loc: `POINT(${driverLoc})`,
   };
+  
   const inventoryParam = {
     MessageBody: `${JSON.stringify(driver)}`,
     QueueUrl: process.env.QUEUE_URL_INVENTORY,
