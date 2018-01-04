@@ -52,7 +52,9 @@ app.post('/bookings', (req, res) => {
 
   axios
     .post('http://ec2-18-218-96-30.us-east-2.compute.amazonaws.com/', inventoryRideInfo)
-    .catch((err) => {});
+    .catch((err) => {
+      console.log(err);
+    });
 
   res.send({ rideId: req.body.ride_id });
 });
