@@ -73,6 +73,7 @@ app.post('/cancelled', async (req, res) => {
 
   let cancellationTime;
   let driverLoc;
+
   if (req.body.cancelled) {
     driverLoc = ride.rider_start;
     if (req.body.wait_est > 5) {
@@ -82,11 +83,12 @@ app.post('/cancelled', async (req, res) => {
     }
   } else {
     driverLoc = ride.rider_end;
-    cancellationTime = null;
+    cancellationTime = 0;
   }
 
-  ride.cancellationTime = cancellationTime;
-  ride.cancelledStatus = req.body.cancelled;
+  ride.cancellation_time = cancellationTime;
+  ride.cancelled = req.body.cancelled;
+  ride.driver_loc = driverLoc;
 
   const driver = {
     driver_id: ride.driver_id,

@@ -53,7 +53,7 @@ async function updateUnmatchedRideInfo(rideId, updatedRideInfo) {
     'INSERT INTO rideshare.matchedrides (ride_id, timestamp, rider_id, rider_start, rider_end, wait_est, driver_id, cancelled, cancellation_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)';
   const params = [
     rideId,
-    ride.timestamp,
+    ride.timestamp, 
     ride.rider_id,
     ride.rider_start,
     ride.rider_end,
