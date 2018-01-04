@@ -11,7 +11,7 @@ dotenv.config();
 
 const app = express();
 
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || 80;
 
 const sqs = new AWS.SQS({
   region: 'us-west-1',
@@ -49,10 +49,12 @@ app.post('/bookings', (req, res) => {
     start_loc: req.body.start_loc,
     ride_id: req.body.ride_id,
   };
-  // axios.post('http://localhost:8080/new_ride', inventoryRideInfo).catch((err) => {
-  // });
-  res.send();
-  // res.send({rideId : req.body.ride_id});
+
+  axios.post(process.env.INVENTORY_URL_NEW_RIDES, inventoryRideInfo).catch((err) => {
+    console.log(err);
+  });
+
+  res.json({ rideId: req.body.ride_id });
 });
 
 app.post('/new_ride', (req, res) => {
@@ -66,6 +68,7 @@ app.post('/updated', (req, res) => {
 
 app.post('/cancelled', async (req, res) => {
   // const cancelledStatus = Math.floor(Math.random() * (2 - 0));
+  // req.body.cancelled = cancelledStatus;
   const ride = await db.getRideInfo(req.body.ride_id);
 
   let cancellationTime;
@@ -89,7 +92,7 @@ app.post('/cancelled', async (req, res) => {
     driver_id: ride.driver_id,
     driver_loc: `POINT(${driverLoc})`,
   };
-  
+
   const inventoryParam = {
     MessageBody: `${JSON.stringify(driver)}`,
     QueueUrl: process.env.QUEUE_URL_INVENTORY,
@@ -118,7 +121,7 @@ app.post('/cancelled', async (req, res) => {
 });
 
 app.get('/', (req, res) => {
-  res.status(200).end();
+  res.status(200).end('Hello World!');
 });
 
 if (!module.parent) {
