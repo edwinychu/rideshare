@@ -49,7 +49,7 @@ app.post('/bookings', (req, res) => {
     start_loc: req.body.start_loc,
     ride_id: req.body.ride_id,
   };
-  // axios.post('http://localhost:8080/new_ride', inventoryRideInfo).catch((err) => {
+  // axios.post('http://ec2-18-218-96-30.us-east-2.compute.amazonaws.com/', inventoryRideInfo).catch((err) => {
   // });
   res.send();
   // res.send({rideId : req.body.ride_id});

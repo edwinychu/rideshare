@@ -1,7 +1,9 @@
 const cassandra = require('cassandra-driver');
 const axios = require('axios');
 
-const client = new cassandra.Client({ contactPoints: ['172.17.0.2'] });
+const client = new cassandra.Client({
+  contactPoints: ['ec2-54-215-130-178.us-west-1.compute.amazonaws.com'],
+});
 
 const queryUnmatched =
   "CREATE TABLE IF NOT EXISTS rideshare.newrides (ride_id text PRIMARY KEY, timestamp int, rider_id int, rider_start text, rider_end text) WITH caching = { 'keys' : 'ALL','rows_per_partition' : 'ALL'}";
