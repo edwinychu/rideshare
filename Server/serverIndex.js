@@ -50,13 +50,11 @@ app.post('/bookings', (req, res) => {
     ride_id: req.body.ride_id,
   };
 
-  axios
-    .post('http://ec2-18-218-96-30.us-east-2.compute.amazonaws.com/', inventoryRideInfo)
-    .catch((err) => {
-      console.log(err);
-    });
+  axios.post(process.env.INVENTORY_URL_NEW_RIDES, inventoryRideInfo).catch((err) => {
+    console.log(err);
+  });
 
-  res.send({ rideId: req.body.ride_id });
+  res.json({ rideId: req.body.ride_id });
 });
 
 app.post('/new_ride', (req, res) => {
@@ -70,6 +68,7 @@ app.post('/updated', (req, res) => {
 
 app.post('/cancelled', async (req, res) => {
   // const cancelledStatus = Math.floor(Math.random() * (2 - 0));
+  // req.body.cancelled = cancelledStatus;
   const ride = await db.getRideInfo(req.body.ride_id);
 
   let cancellationTime;

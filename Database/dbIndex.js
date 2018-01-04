@@ -1,8 +1,12 @@
 const cassandra = require('cassandra-driver');
 const axios = require('axios');
 
+// const client = new cassandra.Client({
+//   contactPoints: [process.env.AWS_DB_URL],
+// });
+
 const client = new cassandra.Client({
-  contactPoints: ['ec2-54-215-130-178.us-west-1.compute.amazonaws.com'],
+  contactPoints: ['localhost'],
 });
 
 const queryUnmatched =
