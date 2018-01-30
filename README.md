@@ -6,7 +6,7 @@ Katherine Manning (Driver Inventory)
 Ayush Kumar (Analytics)
 David Arellano (Driver Dispatch)
 
-#Tech & Framework
+# Tech & Framework
 Node
 Express
 Redis Kue
