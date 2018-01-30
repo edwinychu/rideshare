@@ -6,7 +6,7 @@ RESTful API for a client-facing microservice of a Ridesharing app that handles n
 - Ayush Kumar (Analytics)
 - David Arellano (Driver Dispatch)
 
-# Tech & Framework
+# Tech & Frameworks
 - Node
 - Express
 - Redis Kue
